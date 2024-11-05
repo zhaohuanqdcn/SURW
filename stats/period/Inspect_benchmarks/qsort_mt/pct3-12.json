@@ -1,0 +1,1 @@
+{"program": "Inspect_benchmarks/qsort_mt", "tool": "configs/pct3.json", "iterations": 3437, "time_seconds": 78.22535943984985, "found": true}

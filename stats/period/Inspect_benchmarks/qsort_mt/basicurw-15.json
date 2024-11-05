@@ -1,0 +1,1 @@
+{"program": "Inspect_benchmarks/qsort_mt", "tool": "configs/basicurw.json", "iterations": 27, "time_seconds": 0.7090623378753662, "found": true}

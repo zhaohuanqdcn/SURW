@@ -1,0 +1,1 @@
+{"program": "Inspect_benchmarks/qsort_mt", "tool": "configs/rp-rw.json", "iterations": 2258, "time_seconds": 42.75599694252014, "found": true}

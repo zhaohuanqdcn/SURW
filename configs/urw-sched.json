@@ -1,0 +1,8 @@
+{
+    "iteration": 10000,
+    "timeout": "5m",
+    "log_file": "events.log",
+    "method": "sched_yield",
+    "alg1": "urw",
+    "alg2": "rp"
+}  

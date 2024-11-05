@@ -1,0 +1,11 @@
+FROM fuzz-period
+
+WORKDIR layeredct
+ENV WORKDIR=/opt/sched-fuzz/layeredct
+
+COPY scripts/period/bench_runner.py bench_runner.py
+
+ENV OUTPUT_DIR=/opt/out
+ENV BENCH_CONFIG=$WORKDIR/../sctbench_subject_config.json
+
+CMD python3 ./bench_runner.py

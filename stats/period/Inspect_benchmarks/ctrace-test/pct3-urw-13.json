@@ -1,0 +1,1 @@
+{"program": "Inspect_benchmarks/ctrace-test", "tool": "configs/pct3-urw.json", "iterations": 1, "time_seconds": 0.11379384994506836, "found": true}

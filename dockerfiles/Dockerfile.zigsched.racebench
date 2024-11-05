@@ -1,0 +1,15 @@
+FROM fuzz-racebench
+
+RUN apt-get update && apt-get install && apt-get install -y libgsl-dev libjpeg-dev freeglut3-dev
+WORKDIR layeredct
+ENV WORKDIR=/opt/sched-fuzz/layeredct
+
+COPY scripts/racebench/bench_runner.py bench_runner.py
+
+ENV OUTPUT_DIR=/opt/out
+ENV BENCH_CONFIG=$WORKDIR/../racebench_subject_config.json
+
+COPY scripts/racebench/startup.sh startup.sh
+RUN chmod +x startup.sh
+
+CMD ./startup.sh

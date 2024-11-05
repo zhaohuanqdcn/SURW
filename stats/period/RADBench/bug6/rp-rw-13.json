@@ -1,0 +1,1 @@
+{"program": "RADBench/bug6", "tool": "configs/rp-rw.json", "iterations": 2, "time_seconds": 0.109588623046875, "found": true}

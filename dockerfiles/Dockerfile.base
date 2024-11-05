@@ -1,0 +1,36 @@
+FROM ubuntu:20.04
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt update -y
+RUN apt upgrade -y
+RUN apt-get update -y
+RUN apt install -y git curl wget unzip gcc g++ clang make xxd autoconf automake autotools-dev libtool pkg-config fakeroot libtinfo5 
+RUN apt install -y python python3 python3-pip 
+RUN apt-get install -y vim
+
+# RUN wget https://download.java.net/java/GA/jdk19.0.2/fdb695a9d9064ad6b064dc6df578380c/7/GPL/openjdk-19.0.2_linux-x64_bin.tar.gz
+# RUN tar -xvf openjdk-19.0.2_linux-x64_bin.tar.gz
+# ENV PATH=$PATH:/jdk-19.0.2/bin
+# RUN java --version
+
+WORKDIR /opt
+# install zig
+ENV ZIG_VER=0.11.0
+ENV ZIG_DIR=zig-linux-x86_64-$ZIG_VER
+RUN wget https://ziglang.org/download/$ZIG_VER/$ZIG_DIR.tar.xz
+RUN tar -xvf zig-linux*
+ENV PATH=$PATH:/opt/$ZIG_DIR
+RUN zig zen
+
+WORKDIR /opt/sched-fuzz
+
+COPY . layeredct 
+RUN cd layeredct/e9patch; ./build.sh
+RUN cd layeredct; zig build  
+RUN pip3 install polars==0.20.21 
+RUN pip3 install tqdm numpy
+
+RUN mkdir -p /opt/out
+
+

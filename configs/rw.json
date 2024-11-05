@@ -1,0 +1,8 @@
+{
+    "iteration": 10000,
+    "timeout": "5m",
+    "log_file": "events.log",
+    "method": "always_false",
+    "alg1": "ns",
+    "alg2": "rw"
+}  

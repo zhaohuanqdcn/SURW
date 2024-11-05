@@ -1,0 +1,1 @@
+{"program": "Inspect_benchmarks/qsort_mt", "tool": "configs/pos.json", "iterations": 1707, "time_seconds": 36.51850414276123, "found": true}

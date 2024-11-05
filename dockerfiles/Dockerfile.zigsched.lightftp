@@ -1,0 +1,19 @@
+FROM fuzz-lftp
+
+WORKDIR layeredct
+ENV WORKDIR=/opt/sched-fuzz/layeredct
+
+RUN apt-get install -y net-tools && netstat --version
+
+RUN mkdir ftpshare
+COPY scripts/lftp/data.txt data.txt
+COPY scripts/lftp/estimate.in estimate.in
+COPY scripts/lftp/fork.in fork.in
+COPY scripts/lftp/input_gen.py input_gen.py
+COPY scripts/lftp/bench_runner.py bench_runner.py
+RUN cp /workdir/lftp/Source/Release/fftp fftp
+RUN cp -r /workdir/lftp/Bin Bin; cp /workdir/lftp/client client
+
+ENV OUTPUT_DIR=/opt/out
+
+CMD python3 ./bench_runner.py

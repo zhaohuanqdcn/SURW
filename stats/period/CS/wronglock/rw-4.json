@@ -1,0 +1,1 @@
+{"program": "CS/wronglock", "tool": "configs/rw.json", "iterations": 20, "time_seconds": 0.09196972846984863, "found": true}

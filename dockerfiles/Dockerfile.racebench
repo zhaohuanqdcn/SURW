@@ -1,0 +1,32 @@
+FROM ubuntu:20.04
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN cp /etc/apt/sources.list /etc/apt/sources.list.bak
+RUN apt-get clean
+RUN apt-get update --fix-missing -y
+RUN apt-get upgrade -y
+RUN apt-get install -y wget git build-essential apt-utils python3 python python3-pip tmux cmake libtool libtool-bin automake autoconf autotools-dev m4 autopoint libboost-dev help2man gnulib bison flex texinfo zlib1g-dev libexpat1-dev libfreetype6 libfreetype6-dev libbz2-dev liblzo2-dev libtinfo-dev libssl-dev pkg-config libswscale-dev libarchive-dev liblzma-dev liblz4-dev doxygen vim intltool gcc-multilib sudo --fix-missing
+RUN apt-get install -y wget libssl-dev zlib1g-dev libx11-dev libgl-dev --fix-missing
+RUN apt-get install -y libgsl-dev libjpeg-dev
+RUN apt-get install -y freeglut3-dev
+
+RUN mkdir -p /workdir/RaceBenchData
+
+RUN git clone https://github.com/rb130/RaceBenchData.git /workdir/RaceBenchData
+
+WORKDIR /workdir/RaceBenchData
+ENV ROOT_DIR "/workdir/RaceBenchData"
+
+RUN ./build.sh
+
+COPY scripts/racebench/build.py build.py
+RUN python3 build.py
+
+FROM schedfuzz-base
+ENV ROOT_DIR "/workdir/RaceBenchData"
+
+COPY --from=0 /workdir /workdir
+WORKDIR /opt/sched-fuzz
+RUN cp /workdir/RaceBenchData/racebench_subject_config.json /opt/sched-fuzz
+RUN apt install python3-pip -y
+

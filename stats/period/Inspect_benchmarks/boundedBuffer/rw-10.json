@@ -1,0 +1,1 @@
+{"program": "Inspect_benchmarks/boundedBuffer", "tool": "configs/rw.json", "iterations": 20, "time_seconds": 0.6794636249542236, "found": true}

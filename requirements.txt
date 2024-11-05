@@ -1,0 +1,8 @@
+docker
+pandas
+numpy
+lifelines
+matplotlib
+scipy
+polars
+polars==0.20.21 

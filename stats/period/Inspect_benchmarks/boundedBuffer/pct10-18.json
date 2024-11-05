@@ -1,0 +1,1 @@
+{"program": "Inspect_benchmarks/boundedBuffer", "tool": "configs/pct10.json", "iterations": 10, "time_seconds": 0.05345034599304199, "found": true}

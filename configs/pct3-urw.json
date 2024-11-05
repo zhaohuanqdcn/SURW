@@ -1,0 +1,9 @@
+{
+    "iteration": 10000,
+    "timeout": "5m",
+    "log_file": "events.log",
+    "method": "memory_addr",
+    "alg1": "urw",
+    "alg2": "pct",
+    "depth": 3
+}  
