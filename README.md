@@ -1,13 +1,38 @@
-# Selectively Uniform Concurrency Testing
+# Selectively Uniform Concurrency Testing (SURW)
 
-A user-space controlled scheduling library that wraps the `pthreads` library.
-It implements multiple stateless sampling algorithms.
-Written mainly in Zig.
+SURW is an online scheduling algorithm that effectively samples interleavings of concurrent programs.
+
+This repository implements SURW and other different scheduling algorithms for user-space programs written in C/C++. 
+It serializes program executions by wrapping around the `pthreads` library.
+The scheduler is written mainly in Zig.
+
+For internals of the algorithm, please check out our [ASPLOS'25 paper](https://zhaohuanqdcn.github.io/assets/files/asplos25.pdf).
+
+If you use our work for academic research, please cite our paper:
+
+```
+@inproceedings{surw,
+    author = {Zhao, Huan and Wolff, Dylan and Mathur, Umang and Roychoudhury, Abhik},
+    title = {Selectively Uniform Concurrency Testing},
+    year = {2025},
+    isbn = {9798400706981},
+    publisher = {Association for Computing Machinery},
+    address = {New York, NY, USA},
+    url = {https://doi.org/10.1145/3669940.3707214},
+    doi = {10.1145/3669940.3707214},
+    booktitle = {Proceedings of the 30th ACM International Conference on Architectural Support for Programming Languages and Operating Systems, Volume 1},
+    pages = {1003–1019},
+    numpages = {17},
+    location = {Rotterdam, Netherlands},
+    series = {ASPLOS '25}
+}
+```
 
 ## Dependencies
 
-The library requires a recent version of Ubuntu on an x86 CPU. 
-To install Docker, Python and E9Path, run
+The library requires a recent version of Linux on an x86 CPU. 
+
+To install Docker, Python and E9Path on Ubuntu, run
 ```
 sudo snap install docker
 sudo groupadd docker
@@ -24,7 +49,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Disable ASLR
+## Disabling ASLR
 
 The scheduling library requires disabled ASLR. To do so, run
 ```
@@ -32,24 +57,9 @@ echo 0 | sudo tee /proc/sys/kernel/randomize_va_space
 ```
 _Note: your system will be more vulnerable to exploits while ASLR is disabled. ASLR will be reinstated on reboot._
 
-## Setup in Docker
+## Reproducing Results from the Paper
 
-The easiest way to build and run the targets is with Docker!
-
-To install required Python3 dependencies, run
-```
-pip install requirements.txt
-```
-
-If Docker is running, [SCTBench, ConVul, RaceBenchData and LightFTP] can be all built with a single command:
-```
-./build_all.sh
-```
-The building process may take a 1-3 hours.
-
-## Rerun Experiments in Docker
-
-The raw data are saved in the `stats/` folder.
+Raw data from the paper is saved in the `stats/` folder.
 To regenerate tables and diagrams, run
 ```
 python3 scripts/analyze/eval_period.py
@@ -57,6 +67,14 @@ python3 scripts/analyze/eval_racebench.py
 python3 scripts/analyze/plot_lftp_a.py
 python3 scripts/analyze/plot_lftp_b.py
 ```
+
+The easiest way to build and rerun the targets is with Docker!
+Build Docker images for the targets (SCTBench, ConVul, RaceBenchData and LightFTP) with a single command as below.
+The building process may take a 1-3 hours.
+```
+./build_all.sh
+```
+
 
 Experiments can be rerun with 
 ```
@@ -66,7 +84,7 @@ python3 scripts/eval/run_lftp.py
 ```
 All experiments should finish <3 days on a typical 8 core CPU.
 
-## Manual Setup
+## Building the Library Locally
 
 Install zig
 ```
@@ -108,7 +126,7 @@ On expectation, each result is sampled ~40 times.
 As the number of iterations increases, the distribution eventually converges to uniformity.
 
 
-## Manual Workflow
+## Testing Other Programs
 
 By default, scheduling decisions are only made at `pthreads` and `sched_yield()` calls.
 To add pre-emption points at memory operations, instrument the program binary with
