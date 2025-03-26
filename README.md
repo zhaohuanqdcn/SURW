@@ -1,12 +1,17 @@
-# Selectively Uniform Concurrency Testing (SURW)
+# Concurrency Testing Library for C/C++ Programs
 
-SURW is an online scheduling algorithm that effectively samples interleavings of concurrent programs.
+This repository provides a randomized concurrency testing framework for C/C++ user-space programs.
 
-This repository implements SURW and other different scheduling algorithms for user-space programs written in C/C++. 
-It serializes program executions by wrapping around the `pthreads` library.
-The scheduler is written mainly in Zig.
+## Overview
 
+This repository implements a dynamic library that *serializes* program execution by wrapping around the `pthreads` library.
+It can generate random thread interleavings, which can then be deterministically reproduced with the same random seed.
+The framework is written mainly in Zig.
+
+The library implmements different scheduling algorithms such as Probabilistic Concurrency Testing (PCT) and Partial Order Sampling (POS).
+More prominently, it features *Selectively Uniform Random Walk* (SURW), a new online scheduling algorithm that tries to sample interleavings uniformly for a selective subset of program events.
 For internals of the algorithm, please check out our [ASPLOS'25 paper](https://zhaohuanqdcn.github.io/assets/files/asplos25.pdf).
+
 
 If you use our work for academic research, please cite our paper:
 
@@ -30,7 +35,7 @@ If you use our work for academic research, please cite our paper:
 
 ## Dependencies
 
-The library requires a recent version of Linux on an x86 CPU. 
+The library is tested on a recent version of Linux on an x86 CPU. 
 
 To install Docker, Python and E9Path on Ubuntu, run
 ```
@@ -72,7 +77,7 @@ The easiest way to build and rerun the targets is with Docker!
 Build Docker images for the targets (SCTBench, ConVul, RaceBenchData and LightFTP) with a single command as below.
 The building process may take a 1-3 hours.
 ```
-./build_all.sh
+./buiall.sh
 ```
 
 
