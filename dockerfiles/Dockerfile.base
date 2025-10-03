@@ -17,9 +17,10 @@ RUN apt-get install -y vim
 WORKDIR /opt
 # install zig
 ENV ZIG_VER=0.11.0
-ENV ZIG_DIR=zig-linux-x86_64-$ZIG_VER
+ENV ZIG_ARCH=x86_64
+ENV ZIG_DIR=zig-linux-$ZIG_ARCH-$ZIG_VER
 RUN wget https://ziglang.org/download/$ZIG_VER/$ZIG_DIR.tar.xz
-RUN tar -xvf zig-linux*
+RUN tar -xvf $ZIG_DIR.tar.xz
 ENV PATH=$PATH:/opt/$ZIG_DIR
 RUN zig zen
 

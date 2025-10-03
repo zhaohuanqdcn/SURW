@@ -11,31 +11,11 @@ The framework is written mainly in Zig.
 The library implmements different scheduling algorithms such as Probabilistic Concurrency Testing (PCT) and Partial Order Sampling (POS).
 More prominently, it features *Selectively Uniform Random Walk* (SURW), a new online scheduling algorithm that tries to sample interleavings uniformly for a selective subset of program events.
 For internals of the algorithm, please check out our [ASPLOS'25 paper](https://zhaohuanqdcn.github.io/assets/files/asplos25.pdf).
-
-
-If you use our work for academic research, please cite our paper:
-
-```
-@inproceedings{surw,
-    author = {Zhao, Huan and Wolff, Dylan and Mathur, Umang and Roychoudhury, Abhik},
-    title = {Selectively Uniform Concurrency Testing},
-    year = {2025},
-    isbn = {9798400706981},
-    publisher = {Association for Computing Machinery},
-    address = {New York, NY, USA},
-    url = {https://doi.org/10.1145/3669940.3707214},
-    doi = {10.1145/3669940.3707214},
-    booktitle = {Proceedings of the 30th ACM International Conference on Architectural Support for Programming Languages and Operating Systems, Volume 1},
-    pages = {1003–1019},
-    numpages = {17},
-    location = {Rotterdam, Netherlands},
-    series = {ASPLOS '25}
-}
-```
+To use the algorithm in another language, see [Related Projects](#related-projects).
 
 ## Dependencies
 
-The library is tested on a recent version of Linux on an x86 CPU. 
+The library is tested on a recent version of Linux on an x86(_64) CPU. 
 
 To install Docker, Python and E9Path on Ubuntu, run
 ```
@@ -77,7 +57,7 @@ The easiest way to build and rerun the targets is with Docker!
 Build Docker images for the targets (SCTBench, ConVul, RaceBenchData and LightFTP) with a single command as below.
 The building process may take a 1-3 hours.
 ```
-./buiall.sh
+./build_all.sh
 ```
 
 
@@ -91,30 +71,34 @@ All experiments should finish <3 days on a typical 8 core CPU.
 
 ## Building the Library Locally
 
-Install zig
+**Step 1**. Make sure you have Zig-0.11.0 installed:
 ```
 export ZIG_VER=0.11.0
 export ZIG_DIR=zig-linux-x86_64-$ZIG_VER
 wget https://ziglang.org/download/$ZIG_VER/$ZIG_DIR.tar.xz
-tar -xvf zig-linux*
-export PATH=$PATH:/opt/$ZIG_DIR
-zig zen
+tar -xvf $ZIG_DIR.tar.xz
+export PATH=$PATH:<path_to_zig>
 ```
+and verify your installation with `zig zen`.
 
-Build e9patch
+*Note*: Higher version of Zig may not work due to backward incompatibility. 
+
+**Step 2**. Build the binary instrumentation tool [e9patch](https://github.com/GJDuck/e9patch/tree/master):
 ```
 cd e9patch; ./build.sh; cd ../
 ```
 
-Build the scheduling library (add `-Doptimize=ReleaseFast` for release):
+**Step 3**. Build the scheduling library (add `-Doptimize=ReleaseFast` for release):
 ```
 zig build
 ```
 
-Once everything is built, you can run tests with:
+**Step 4**. Once everything is built, you can run tests with:
 ```
-zig test -lc src/main.zig
+zig test -lc src/tests.zig
 ```
+which would give `All 22 tests passed`. 
+In case of failures, please double check if you have [ASLR disabled](#disabling-aslr).
 
 ## Running Toy Examples
 
@@ -180,10 +164,10 @@ Supported methods are:
 - `memory_addr`: on target memory address accesses (read / write)
 - `lock_addr`: on lock accesses (acqire = read / release = write)
 
-Note that not all combinations are currently supported in this research prototype.
+*Note*: Not all combinations are currently supported in this research prototype.
 For example, `pct` can only be `alg2` and `urw` can only be `alg1`.
 
-[Not Recommended] To run one individual schedule manually, invoke
+To run one individual schedule manually, invoke
 ```
 LOG_FILE=<path to text log file> RANDOM_SEED=<random seed> \
 METHOD=<method> ALG1=<algorithm> ALG2=<algorithm> \
@@ -192,3 +176,30 @@ LD_PRELOAD=$(pwd)/zig-out/bin/libzigsched.so \
 ```
 Note that SURW and PCT requires a profiling run.
 For more example usage, please refer to `scripts/run_one.py`.
+
+## Related Projects
+
+- **Java**: The (S)URW algorithm is implemented in [fray](https://github.com/cmu-pasta/fray) from CMU.
+
+- **Rust**: A variant of the algorithm is implemented in [shuttle](https://github.com/awslabs/shuttle) from AWS Labs.
+
+- This serialization framework is closely related to the concurrency fuzzer [RFF](https://github.com/dylanjwolff/RFF).
+
+
+## BibTex
+
+If you use our work for academic research, please cite our paper:
+
+```
+@inproceedings{surw,
+    author = {Zhao, Huan and Wolff, Dylan and Mathur, Umang and Roychoudhury, Abhik},
+    title = {Selectively Uniform Concurrency Testing},
+    year = {2025},
+    doi = {10.1145/3669940.3707214},
+    booktitle = {Proceedings of the 30th ACM International Conference on Architectural Support for Programming Languages and Operating Systems, Volume 1},
+    pages = {1003–1019},
+    numpages = {17},
+    location = {Rotterdam, Netherlands},
+    series = {ASPLOS '25}
+}
+```
