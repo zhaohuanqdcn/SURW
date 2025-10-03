@@ -2,7 +2,7 @@ const std = @import("std");
 const testing = std.testing;
 pub const std_options = struct {
     // Set this to .info, .debug, .warn, or .err.
-    pub const log_level = .debug;
+    pub const log_level = .warn;
 };
 
 const c = @cImport({
@@ -193,8 +193,21 @@ fn parse_algo(name: []const u8) ALG {
     }
 }
 
+const LOG_BUFFER_SIZE: usize = 4096;
 var logfile_name: ?[]u8 = undefined;
-var logfile_writer: ?std.fs.File.Writer = undefined;
+var logfile_file: ?std.fs.File = null;
+var logfile_buf: ?std.io.BufferedWriter(LOG_BUFFER_SIZE, std.fs.File.Writer) = null;
+var logfile_writer: ?std.io.BufferedWriter(LOG_BUFFER_SIZE, std.fs.File.Writer).Writer = null;
+
+fn flush_logfile() callconv(.C) void {
+    if (logfile_buf) |*buf| {
+        _ = buf.flush() catch {};
+    }
+    if (logfile_file) |*f| {
+        f.close();
+        logfile_file = null;
+    }
+}
 
 var SHOULD_LOG = false;
 var HAS_INITIALIZED = false;
@@ -229,8 +242,11 @@ export fn init() void {
     if (maybe_logfile_name != null) {
         logfile_name = std.mem.span(maybe_logfile_name);
         SHOULD_LOG = true;
-        const logfile_file = std.fs.cwd().createFile(logfile_name.?, .{}) catch @panic("Cannot open logfile!");
-        logfile_writer = logfile_file.writer();
+        logfile_file = std.fs.cwd().createFile(logfile_name.?, .{}) catch @panic("Cannot open logfile!");
+        logfile_buf = std.io.bufferedWriter(logfile_file.?.writer());
+        logfile_writer = logfile_buf.?.writer();
+        // Ensure buffer is flushed on process exit
+        _ = c.atexit(flush_logfile);
     }
     const rand_seed = c.getenv("RANDOM_SEED");
     if (rand_seed != null) {
@@ -976,7 +992,7 @@ export fn pthread_barrier_wait(barrier: ?*c.pthread_barrier_t) c_int {
     std.log.debug("[{}] reach barr w. {} of {} total waiters", .{ current_thread.det_id, internal_barrier.*.waiters.items.len, internal_barrier.*.count });
     if (SHOULD_LOG) {
         if (logfile_writer != null) {
-            std.fmt.format(logfile_writer.?, "{}|bwait({*})|0\n", .{ current_thread.det_id, barrier }) catch @panic("Failed to log to file");
+            std.fmt.format(logfile_writer.?, "{}|bwait({?x})|0\n", .{ current_thread.det_id, if (barrier) |b| @intFromPtr(b) else null }) catch @panic("Failed to log to file");
         }
     }
 
@@ -985,7 +1001,7 @@ export fn pthread_barrier_wait(barrier: ?*c.pthread_barrier_t) c_int {
             t.is_blocking = false;
             if (SHOULD_LOG) {
                 if (logfile_writer != null) {
-                    std.fmt.format(logfile_writer.?, "{}|brel({*})|0\n", .{ t.det_id, barrier }) catch @panic("Failed to log to file");
+                    std.fmt.format(logfile_writer.?, "{}|brel({?x})|0\n", .{ t.det_id, if (barrier) |b| @intFromPtr(b) else null }) catch @panic("Failed to log to file");
                 }
             }
         }
@@ -1034,9 +1050,9 @@ export fn pthread_mutex_trylock(lock: ?*std.c.pthread_mutex_t) c_int {
     if (SHOULD_LOG) {
         if (logfile_writer != null) {
             if (method == METHOD.LOCK_AS_MEM) {
-                std.fmt.format(logfile_writer.?, "{}|r({*})|0\n", .{ current_thread.det_id, lock }) catch @panic("Failed to log to file");
+                std.fmt.format(logfile_writer.?, "{}|r({?x})|0\n", .{ current_thread.det_id, if (lock) |l| @intFromPtr(l) else null }) catch @panic("Failed to log to file");
             } else {
-                std.fmt.format(logfile_writer.?, "{}|acq({*})|0\n", .{ current_thread.det_id, lock }) catch @panic("Failed to log to file");
+                std.fmt.format(logfile_writer.?, "{}|acq({?x})|0\n", .{ current_thread.det_id, if (lock) |l| @intFromPtr(l) else null }) catch @panic("Failed to log to file");
             }
         }
     }
@@ -1072,9 +1088,9 @@ export fn pthread_mutex_lock(lock: ?*std.c.pthread_mutex_t) c_int {
     if (SHOULD_LOG) {
         if (logfile_writer != null) {
             if (method == METHOD.LOCK_AS_MEM) {
-                std.fmt.format(logfile_writer.?, "{}|r({*})|0\n", .{ current_thread.det_id, lock }) catch @panic("Failed to log to file");
+                std.fmt.format(logfile_writer.?, "{}|r({?x})|0\n", .{ current_thread.det_id, if (lock) |l| @intFromPtr(l) else null }) catch @panic("Failed to log to file");
             } else {
-                std.fmt.format(logfile_writer.?, "{}|acq({*})|0\n", .{ current_thread.det_id, lock }) catch @panic("Failed to log to file");
+                std.fmt.format(logfile_writer.?, "{}|acq({?x})|0\n", .{ current_thread.det_id, if (lock) |l| @intFromPtr(l) else null }) catch @panic("Failed to log to file");
             }
         }
     }
@@ -1122,9 +1138,9 @@ export fn pthread_mutex_unlock(lock: ?*std.c.pthread_mutex_t) c_int {
     if (SHOULD_LOG) {
         if (logfile_writer != null) {
             if (method == METHOD.LOCK_AS_MEM) {
-                std.fmt.format(logfile_writer.?, "{}|w({*})|0\n", .{ current_thread.det_id, lock }) catch @panic("Failed to log to file");
+                std.fmt.format(logfile_writer.?, "{}|w({?x})|0\n", .{ current_thread.det_id, if (lock) |l| @intFromPtr(l) else null }) catch @panic("Failed to log to file");
             } else {
-                std.fmt.format(logfile_writer.?, "{}|rel({*})|0\n", .{ current_thread.det_id, lock }) catch @panic("Failed to log to file");
+                std.fmt.format(logfile_writer.?, "{}|rel({?x})|0\n", .{ current_thread.det_id, if (lock) |l| @intFromPtr(l) else null }) catch @panic("Failed to log to file");
             }
         }
     }
@@ -1307,9 +1323,9 @@ export fn pthread_rwlock_rdlock(lock: ?*std.c.pthread_rwlock_t) c_int {
     if (SHOULD_LOG) {
         if (logfile_writer != null) {
             if (method == METHOD.LOCK_AS_MEM) {
-                std.fmt.format(logfile_writer.?, "{}|r({*})|0\n", .{ current_thread.det_id, lock }) catch @panic("Failed to log to file");
+                std.fmt.format(logfile_writer.?, "{}|r({?x})|0\n", .{ current_thread.det_id, if (lock) |l| @intFromPtr(l) else null }) catch @panic("Failed to log to file");
             } else {
-                std.fmt.format(logfile_writer.?, "{}|acq({*})|0\n", .{ current_thread.det_id, lock }) catch @panic("Failed to log to file");
+                std.fmt.format(logfile_writer.?, "{}|acq({?x})|0\n", .{ current_thread.det_id, if (lock) |l| @intFromPtr(l) else null }) catch @panic("Failed to log to file");
             }
         }
     }
@@ -1376,9 +1392,9 @@ export fn pthread_rwlock_unlock(lock: ?*std.c.pthread_rwlock_t) c_int {
     if (SHOULD_LOG) {
         if (logfile_writer != null) {
             if (method == METHOD.LOCK_AS_MEM) {
-                std.fmt.format(logfile_writer.?, "{}|w({*})|0\n", .{ current_thread.det_id, lock }) catch @panic("Failed to log to file");
+                std.fmt.format(logfile_writer.?, "{}|w({?x})|0\n", .{ current_thread.det_id, if (lock) |l| @intFromPtr(l) else null }) catch @panic("Failed to log to file");
             } else {
-                std.fmt.format(logfile_writer.?, "{}|rel({*})|0\n", .{ current_thread.det_id, lock }) catch @panic("Failed to log to file");
+                std.fmt.format(logfile_writer.?, "{}|rel({?x})|0\n", .{ current_thread.det_id, if (lock) |l| @intFromPtr(l) else null }) catch @panic("Failed to log to file");
             }
         }
     }
@@ -1427,9 +1443,9 @@ export fn pthread_rwlock_wrlock(lock: ?*std.c.pthread_rwlock_t) c_int {
     if (SHOULD_LOG) {
         if (logfile_writer != null) {
             if (method == METHOD.LOCK_AS_MEM) {
-                std.fmt.format(logfile_writer.?, "{}|r({*})|0\n", .{ current_thread.det_id, lock }) catch @panic("Failed to log to file");
+                std.fmt.format(logfile_writer.?, "{}|r({?x})|0\n", .{ current_thread.det_id, if (lock) |l| @intFromPtr(l) else null }) catch @panic("Failed to log to file");
             } else {
-                std.fmt.format(logfile_writer.?, "{}|acq({*})|0\n", .{ current_thread.det_id, lock }) catch @panic("Failed to log to file");
+                std.fmt.format(logfile_writer.?, "{}|acq({?x})|0\n", .{ current_thread.det_id, if (lock) |l| @intFromPtr(l) else null }) catch @panic("Failed to log to file");
             }
         }
     }
@@ -1570,9 +1586,9 @@ export fn schedule_memop(instr_addr: ?*const anyopaque, mem_addr: ?*const anyopa
     if (SHOULD_LOG) {
         if (logfile_writer != null) {
             if (is_write) {
-                std.fmt.format(logfile_writer.?, "{}|w({?})|{?x}\n", .{ current_thread.det_id, mem_addr, instr_addr }) catch @panic("Failed to log to file");
+                std.fmt.format(logfile_writer.?, "{}|w({?x})|{?x}\n", .{ current_thread.det_id, if (mem_addr) |maddr| @intFromPtr(maddr) else null, if (instr_addr) |iaddr| @intFromPtr(iaddr) else null }) catch @panic("Failed to log to file");
             } else {
-                std.fmt.format(logfile_writer.?, "{}|r({?})|{?x)}\n", .{ current_thread.det_id, mem_addr, instr_addr }) catch @panic("Failed to log to file");
+                std.fmt.format(logfile_writer.?, "{}|r({?x})|{?x}\n", .{ current_thread.det_id, if (mem_addr) |maddr| @intFromPtr(maddr) else null, if (instr_addr) |iaddr| @intFromPtr(iaddr) else null }) catch @panic("Failed to log to file");
             }
         }
     }

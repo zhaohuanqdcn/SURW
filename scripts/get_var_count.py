@@ -6,8 +6,8 @@ df = pl.scan_csv(sys.argv[1], separator="|", has_header=False, new_columns = ["t
 
 df = df.with_columns(
     pl.col("op").str.split("(").list.first().alias("op_name"),
-    pl.col("op").str.split("@").list.get(1).str.split(")").list.first().alias("mem_addr"),
-    pl.col("instr").str.split("@").list.get(1).alias("instr_addr"),
+    pl.col("op").str.split("(").list.get(1).str.split(")").list.first().alias("mem_addr"),
+    pl.col("instr").str.split("(").list.get(1).alias("instr_addr"),
 ).select(["thread", "op_name", "mem_addr"])
 
 threads = df.select("thread").unique()

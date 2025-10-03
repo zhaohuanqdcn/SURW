@@ -3,3 +3,11 @@
 .zig-cache/
 zig-out/
 zig-cache/
+*.log
+dist.txt
+dist.png
+estimate.in
+fork.in
+event.in
+var_count.csv
+*.inst
