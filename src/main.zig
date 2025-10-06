@@ -12,6 +12,7 @@ const c = @cImport({
     @cInclude("pthread.h");
     @cInclude("stdlib.h");
     @cInclude("errno.h");
+    @cInclude("signal.h");
 });
 
 const METHOD = enum(u32) {
@@ -209,6 +210,22 @@ fn flush_logfile() callconv(.C) void {
     }
 }
 
+fn signal_handler_c(sig: c_int) callconv(.C) void {
+    flush_logfile();
+    _ = c.signal(sig, c.SIG_DFL);
+    _ = c.raise(sig);
+}
+
+fn install_signal_handlers() void {
+    _ = c.signal(c.SIGSEGV, signal_handler_c);
+    _ = c.signal(c.SIGABRT, signal_handler_c);
+    _ = c.signal(c.SIGILL, signal_handler_c);
+    _ = c.signal(c.SIGFPE, signal_handler_c);
+    _ = c.signal(c.SIGBUS, signal_handler_c);
+    _ = c.signal(c.SIGTERM, signal_handler_c);
+    _ = c.signal(c.SIGINT, signal_handler_c);
+}
+
 var SHOULD_LOG = false;
 var HAS_INITIALIZED = false;
 export fn init() void {
@@ -247,6 +264,8 @@ export fn init() void {
         logfile_writer = logfile_buf.?.writer();
         // Ensure buffer is flushed on process exit
         _ = c.atexit(flush_logfile);
+        // Also try to flush on crashes and terminations
+        install_signal_handlers();
     }
     const rand_seed = c.getenv("RANDOM_SEED");
     if (rand_seed != null) {
