@@ -5,7 +5,7 @@ import sys
 df = pl.scan_csv(sys.argv[1], separator="|", has_header=False, new_columns = ["thread", "op", "instr"])
 
 df = df.with_columns(
-    (pl.col("op").is_in(["sched_yield", "force_yield"])).alias("is_yield")
+    (pl.col("op").is_in(["sched_yield()", "force_yield()"])).alias("is_yield")
 ).select(["thread", "is_yield"])
 
 df = df.group_by(["thread"]).agg([pl.sum("is_yield")]).sort(["thread"])
